@@ -2,7 +2,7 @@ import json
 
 class SyntaxTree:
     """
-    Класс для хранения синтаксического дерева предложения.
+    Класс для хранения синтаксического и семантического дерева предложения.
     """
     def __init__(self):
         """
@@ -10,9 +10,9 @@ class SyntaxTree:
         """
         self.nodes = {}
 
-    def add_node(self, node_id, text, pos, head_id, rel):
+    def add_node(self, node_id, text, pos, head_id, rel, lemma=None, semantic_role=None, lexical_type=None, word_meaning=None):
         """
-        Добавляет узел в синтаксическое дерево.
+        Добавляет узел в синтаксическое дерево с семантическими данными.
 
         Args:
             node_id (str): Уникальный идентификатор узла.
@@ -20,12 +20,20 @@ class SyntaxTree:
             pos (str): Часть речи токена.
             head_id (str): ID родительского узла.
             rel (str): Тип синтаксической связи.
+            lemma (str, optional): Лемма слова.
+            semantic_role (str, optional): Семантическая роль.
+            lexical_type (str, optional): Тип лексического значения (прямое/переносное).
+            word_meaning (str, optional): Значение слова.
         """
         self.nodes[node_id] = {
             'text': text,
             'pos': pos,
             'head_id': head_id,
-            'rel': rel
+            'rel': rel,
+            'lemma': lemma,
+            'semantic_role': semantic_role,
+            'lexical_type': lexical_type,
+            'word_meaning': word_meaning
         }
 
     def to_dict(self):

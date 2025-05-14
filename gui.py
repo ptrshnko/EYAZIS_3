@@ -10,23 +10,22 @@ from pos_rel_translations import translate_pos, translate_rel
 
 class MainWindow(QMainWindow):
     """
-    Основное окно приложения для синтаксического анализа текста.
+    Основное окно приложения для синтаксического и семантического анализа текста.
     """
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Синтаксический анализатор текста")
-        self.setGeometry(100, 100, 900, 600)
+        self.setWindowTitle("Синтаксический и семантический анализатор текста")
+        self.setGeometry(100, 100, 1200, 600)
         self.analyzer = TextAnalyzer()
         self.result_manager = ResultManager()
-        self.current_results = []  # Хранение текущих результатов анализа
+        self.current_results = []
         self.init_ui()
-        self.setAcceptDrops(True)  # Включение drag-and-drop
+        self.setAcceptDrops(True)
 
     def init_ui(self):
         """
         Инициализация пользовательского интерфейса.
         """
-        # Главный виджет и макет
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         main_layout = QVBoxLayout(central_widget)
@@ -52,7 +51,7 @@ class MainWindow(QMainWindow):
             button_layout.addWidget(btn)
         main_layout.addLayout(button_layout)
 
-        # Текстовое поле для исходного текста (редактируемое)
+        # Текстовое поле для исходного текста
         self.text_edit = QTextEdit()
         self.text_edit.setPlaceholderText("Загрузите RTF-файл или введите текст для анализа")
         self.text_edit.setStyleSheet("QTextEdit { font-size: 14px; padding: 10px; }")
@@ -60,13 +59,21 @@ class MainWindow(QMainWindow):
 
         # Дерево для отображения результатов анализа
         self.tree_widget = QTreeWidget()
-        self.tree_widget.setHeaderLabels(["Идентификатор", "Слово", "Часть речи", "Член предложения", "К какому слову относится"])
+        self.tree_widget.setHeaderLabels([
+            "Идентификатор", "Слово", "Часть речи", "Член предложения", 
+            "К какому слову относится", "Лемма", "Семантическая роль", 
+            "Тип лексического значения", "Значение слова"
+        ])
         self.tree_widget.setStyleSheet("QTreeWidget { font-size: 14px; }")
         self.tree_widget.setColumnWidth(0, 50)
-        self.tree_widget.setColumnWidth(1, 150)
+        self.tree_widget.setColumnWidth(1, 100)
         self.tree_widget.setColumnWidth(2, 100)
         self.tree_widget.setColumnWidth(3, 100)
         self.tree_widget.setColumnWidth(4, 100)
+        self.tree_widget.setColumnWidth(5, 100)
+        self.tree_widget.setColumnWidth(6, 120)
+        self.tree_widget.setColumnWidth(7, 120)
+        self.tree_widget.setColumnWidth(8, 150)
         self.tree_widget.itemDoubleClicked.connect(self.edit_node)
         main_layout.addWidget(self.tree_widget)
 
@@ -111,14 +118,18 @@ class MainWindow(QMainWindow):
     def display_results(self, results):
         self.tree_widget.clear()
         for i, tree in enumerate(results):
-            root = QTreeWidgetItem(self.tree_widget, [f"Предложение {i+1}", "", "", "", ""])
+            root = QTreeWidgetItem(self.tree_widget, [f"Предложение {i+1}", "", "", "", "", "", "", "", ""])
             for node_id, node in tree.to_dict().items():
                 item = QTreeWidgetItem(root, [
                     node_id,
                     node['text'],
-                    node['pos'],  # Уже переведено в text_analyzer
-                    node['rel'],  # Уже переведено в text_analyzer
-                    node['head_id']
+                    node['pos'],
+                    node['rel'],
+                    node['head_id'],
+                    node.get('lemma', ''),
+                    node.get('semantic_role', ''),
+                    node.get('lexical_type', ''),
+                    node.get('word_meaning', '')
                 ])
                 item.setData(0, Qt.UserRole, (i, node_id))
             root.setExpanded(True)
@@ -130,6 +141,10 @@ class MainWindow(QMainWindow):
         current_pos = item.text(2)
         current_rel = item.text(3)
         current_head_id = item.text(4)
+        current_lemma = item.text(5)
+        current_semantic_role = item.text(6)
+        current_lexical_type = item.text(7)
+        current_word_meaning = item.text(8)
 
         dialog = QDialog(self)
         dialog.setWindowTitle("Редактировать узел")
@@ -138,10 +153,18 @@ class MainWindow(QMainWindow):
         pos_edit = QLineEdit(current_pos)
         rel_edit = QLineEdit(current_rel)
         head_id_edit = QLineEdit(current_head_id)
+        lemma_edit = QLineEdit(current_lemma)
+        semantic_role_edit = QLineEdit(current_semantic_role)
+        lexical_type_edit = QLineEdit(current_lexical_type)
+        word_meaning_edit = QLineEdit(current_word_meaning)
 
         layout.addRow("Часть речи:", pos_edit)
-        layout.addRow("Связь:", rel_edit)
-        layout.addRow("Родитель (ID):", head_id_edit)
+        layout.addRow("Член предложения:", rel_edit)
+        layout.addRow("К какому слову относится (ID):", head_id_edit)
+        layout.addRow("Лемма:", lemma_edit)
+        layout.addRow("Семантическая роль:", semantic_role_edit)
+        layout.addRow("Тип лексического значения:", lexical_type_edit)
+        layout.addRow("Значение слова:", word_meaning_edit)
 
         buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         buttons.accepted.connect(dialog.accept)
@@ -155,9 +178,15 @@ class MainWindow(QMainWindow):
                 new_pos = translate_pos(pos_edit.text().strip()) if pos_edit.text().strip() else None
                 new_rel = translate_rel(rel_edit.text().strip()) if rel_edit.text().strip() else None
                 new_head_id = head_id_edit.text().strip() or None
+                new_lemma = lemma_edit.text().strip() or None
+                new_semantic_role = semantic_role_edit.text().strip() or None
+                new_lexical_type = lexical_type_edit.text().strip() or None
+                new_word_meaning = word_meaning_edit.text().strip() or None
                 self.current_results = self.result_manager.edit_result(
                     self.current_results, sentence_index, node_id,
-                    new_head_id=new_head_id, new_rel=new_rel, new_pos=new_pos
+                    new_head_id=new_head_id, new_rel=new_rel, new_pos=new_pos,
+                    new_lemma=new_lemma, new_semantic_role=new_semantic_role,
+                    new_lexical_type=new_lexical_type, new_word_meaning=new_word_meaning
                 )
                 self.display_results(self.current_results)
                 QMessageBox.information(self, "Успех", "Узел успешно отредактирован")
