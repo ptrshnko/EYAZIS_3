@@ -22,7 +22,10 @@ class ResultManager:
             if not results:
                 raise ValueError("Результаты анализа пусты")
             if not file_path.lower().endswith('.json'):
-                raise ValueError("Файл должен быть в формате JSON")
+                if not file_path.endswith('.'):
+                    file_path += '.json'
+                else:
+                    file_path += 'json'
 
             # Преобразование результатов в список словарей
             data = [tree.to_dict() for tree in results]
@@ -96,7 +99,10 @@ class ResultManager:
             if not results:
                 raise ValueError("Результаты анализа пусты")
             if not file_path.lower().endswith('.txt'):
-                raise ValueError("Файл должен быть в формате TXT")
+                if not file_path.endswith('.'):
+                    file_path += '.txt'
+                else:
+                    file_path += 'txt'
 
             with open(file_path, 'w', encoding='utf-8') as f:
                 for i, tree in enumerate(results):

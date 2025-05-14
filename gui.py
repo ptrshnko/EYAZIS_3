@@ -6,6 +6,7 @@ from rtf_reader import read_rtf_file
 from text_analyzer import TextAnalyzer
 from result_manager import ResultManager
 from help_system import show_help
+from pos_rel_translations import translate_pos, translate_rel
 
 class MainWindow(QMainWindow):
     """
@@ -59,29 +60,23 @@ class MainWindow(QMainWindow):
 
         # Дерево для отображения результатов анализа
         self.tree_widget = QTreeWidget()
-        self.tree_widget.setHeaderLabels(["ID", "Слово", "Часть речи", "Связь", "Родитель"])
+        self.tree_widget.setHeaderLabels(["Идентификатор", "Слово", "Часть речи", "Член предложения", "К какому слову относится"])
         self.tree_widget.setStyleSheet("QTreeWidget { font-size: 14px; }")
         self.tree_widget.setColumnWidth(0, 50)
         self.tree_widget.setColumnWidth(1, 150)
         self.tree_widget.setColumnWidth(2, 100)
         self.tree_widget.setColumnWidth(3, 100)
         self.tree_widget.setColumnWidth(4, 100)
-        self.tree_widget.itemDoubleClicked.connect(self.edit_node)  # Подключение редактирования
+        self.tree_widget.itemDoubleClicked.connect(self.edit_node)
         main_layout.addWidget(self.tree_widget)
 
     def dragEnterEvent(self, event):
-        """
-        Обработка события входа перетаскивания файла.
-        """
         if event.mimeData().hasUrls():
             event.accept()
         else:
             event.ignore()
 
     def dropEvent(self, event):
-        """
-        Обработка события перетаскивания файла.
-        """
         for url in event.mimeData().urls():
             file_path = url.toLocalFile()
             if file_path.lower().endswith('.rtf'):
@@ -91,24 +86,18 @@ class MainWindow(QMainWindow):
         QMessageBox.warning(self, "Ошибка", "Перетаскивайте только RTF-файлы")
 
     def load_file(self, file_path=None):
-        """
-        Загрузка RTF-файла и отображение текста.
-        """
         if not file_path:
             file_path, _ = QFileDialog.getOpenFileName(self, "Выберите RTF-файл", "", "RTF Files (*.rtf)")
         if file_path:
             try:
                 text = read_rtf_file(file_path)
                 self.text_edit.setText(text)
-                self.tree_widget.clear()  # Очистка предыдущих результатов
-                self.current_results = []  # Сброс результатов
+                self.tree_widget.clear()
+                self.current_results = []
             except Exception as e:
                 QMessageBox.critical(self, "Ошибка", str(e))
 
     def analyze_text(self):
-        """
-        Выполнение синтаксического анализа текста.
-        """
         text = self.text_edit.toPlainText()
         if not text:
             QMessageBox.warning(self, "Предупреждение", "Загрузите или введите текст для анализа")
@@ -120,9 +109,6 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "Ошибка", f"Ошибка анализа: {str(e)}")
 
     def display_results(self, results):
-        """
-        Отображение результатов анализа в дереве.
-        """
         self.tree_widget.clear()
         for i, tree in enumerate(results):
             root = QTreeWidgetItem(self.tree_widget, [f"Предложение {i+1}", "", "", "", ""])
@@ -130,29 +116,21 @@ class MainWindow(QMainWindow):
                 item = QTreeWidgetItem(root, [
                     node_id,
                     node['text'],
-                    node['pos'],
-                    node['rel'],
+                    node['pos'],  # Уже переведено в text_analyzer
+                    node['rel'],  # Уже переведено в text_analyzer
                     node['head_id']
                 ])
-                item.setData(0, Qt.UserRole, (i, node_id))  # Хранение индекса предложения и ID узла
+                item.setData(0, Qt.UserRole, (i, node_id))
             root.setExpanded(True)
 
     def edit_node(self, item, column):
-        """
-        Редактирование узла дерева по двойному клику.
-        """
         if item.text(0).startswith("Предложение"):
-            return  # Игнорировать клик по корневому узлу
-
-        # Получение индекса предложения и ID узла
+            return
         sentence_index, node_id = item.data(0, Qt.UserRole)
-
-        # Текущие значения узла
         current_pos = item.text(2)
         current_rel = item.text(3)
         current_head_id = item.text(4)
 
-        # Создание диалогового окна
         dialog = QDialog(self)
         dialog.setWindowTitle("Редактировать узел")
         layout = QFormLayout()
@@ -174,8 +152,8 @@ class MainWindow(QMainWindow):
 
         if dialog.exec_():
             try:
-                new_pos = pos_edit.text().strip() or None
-                new_rel = rel_edit.text().strip() or None
+                new_pos = translate_pos(pos_edit.text().strip()) if pos_edit.text().strip() else None
+                new_rel = translate_rel(rel_edit.text().strip()) if rel_edit.text().strip() else None
                 new_head_id = head_id_edit.text().strip() or None
                 self.current_results = self.result_manager.edit_result(
                     self.current_results, sentence_index, node_id,
@@ -187,30 +165,28 @@ class MainWindow(QMainWindow):
                 QMessageBox.critical(self, "Ошибка", f"Ошибка редактирования: {str(e)}")
 
     def save_results(self):
-        """
-        Сохранение результатов анализа в JSON-файл.
-        """
         if not self.current_results:
             QMessageBox.warning(self, "Предупреждение", "Нет результатов для сохранения")
             return
         try:
             file_path, _ = QFileDialog.getSaveFileName(self, "Сохранить результаты", "", "JSON Files (*.json)")
             if file_path:
+                if not file_path.lower().endswith('.json'):
+                    file_path += '.json'
                 self.result_manager.save_results(self.current_results, file_path)
                 QMessageBox.information(self, "Успех", "Результаты сохранены в JSON")
         except Exception as e:
             QMessageBox.critical(self, "Ошибка", f"Ошибка сохранения: {str(e)}")
 
     def document_results(self):
-        """
-        Документирование результатов в текстовом формате.
-        """
         if not self.current_results:
             QMessageBox.warning(self, "Предупреждение", "Нет результатов для документирования")
             return
         try:
             file_path, _ = QFileDialog.getSaveFileName(self, "Сохранить документацию", "", "Text Files (*.txt)")
             if file_path:
+                if not file_path.lower().endswith('.txt'):
+                    file_path += '.txt'
                 self.result_manager.document_results(self.current_results, file_path)
                 QMessageBox.information(self, "Успех", "Результаты задокументированы в TXT")
         except Exception as e:
