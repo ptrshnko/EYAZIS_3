@@ -3,3 +3,4 @@ striprtf
 natasha
 setuptools
 pymorphy2
+ruwordnet

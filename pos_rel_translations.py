@@ -1,40 +1,37 @@
-from enum import Enum
-
-class PosTranslation(Enum):
-    """Перевод частей речи на русский язык."""
-    NOUN = "существительное"
-    VERB = "глагол"
-    ADJF = "прилагательное"
-    ADVB = "наречие"
-    PREP = "предлог"
-    PRTF = "причастие"
-    PRTS = "деепричастие"
-    CONJ = "союз"
-    PUNCT = "пунктуация"
-    UNKNOWN = " "
-
-class RelTranslation(Enum):
-    """Перевод синтаксических связей на русский язык."""
-    nsubj = "подлежащее"
-    root = "сказуемое"
-    amod = "определение"
-    obj = "дополнение"
-    punct = "пунктуация"
-    acl = "придаточное"
-    case = "падежный показатель"
-    obl = "косвенное дополнение"
-    conj = "связка"
-    advmod = "обстоятельство"
-    cc = "соединительный союз"  # Добавлен новый тег
-    UNKNOWN = "неизвестно"
-
 def translate_pos(pos):
-    """Переводит часть речи на русский язык."""
-    return PosTranslation[pos.upper() if pos else "UNKNOWN"].value if pos else PosTranslation.UNKNOWN.value
+    """
+    Переводит теги частей речи Natasha в читаемые названия.
+    """
+    pos_map = {
+        'NOUN': 'существительное',
+        'VERB': 'глагол',
+        'ADJ': 'прилагательное',
+        'ADV': 'наречие',
+        'PRON': 'местоимение',
+        'PREP': 'предлог',
+        'CONJ': 'союз',
+        'PRCL': 'частица',
+        'NUM': 'числительное',
+        'GRND': 'деепричастие',
+        None: 'пунктуация'
+    }
+    return pos_map.get(pos, 'неизвестно')
 
 def translate_rel(rel):
-    """Переводит синтаксическую связь на русский язык."""
-    try:
-        return RelTranslation[rel.lower() if rel else "UNKNOWN"].value
-    except KeyError:
-        return RelTranslation.UNKNOWN.value  # Обработка неизвестных тегов
+    """
+    Переводит теги синтаксических связей Natasha в читаемые названия.
+    """
+    rel_map = {
+        'root': 'корень',
+        'nsubj': 'подлежащее',
+        'obj': 'дополнение',
+        'iobj': 'косвенное дополнение',
+        'amod': 'определение',
+        'advmod': 'обстоятельство',
+        'case': 'падежный показатель',
+        'cc': 'соединительный союз',
+        'conj': 'связка',
+        'nmod': 'приложение',
+        'punct': 'пунктуация'
+    }
+    return rel_map.get(rel, 'неизвестно')

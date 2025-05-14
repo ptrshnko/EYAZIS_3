@@ -52,7 +52,8 @@ class ResultManager:
                         head_id=node['head_id'],
                         rel=node['rel'],
                         lemma=node.get('lemma'),
-                        semantic_role=node.get('semantic_role')
+                        semantic_role=node.get('semantic_role'),
+                        word_meaning=node.get('word_meaning')
                     )
                 results.append(tree)
             
@@ -81,13 +82,15 @@ class ResultManager:
                             f"  ID: {node_id}, Слово: {node['text']}, "
                             f"Часть речи: {node['pos']}, Член предложения: {node['rel']}, "
                             f"К какому слову относится: {node['head_id']}, "
-                            f"Лемма: {node.get('lemma', '')}, Семантическая роль: {node.get('semantic_role', '')}\n"
+                            f"Лемма: {node.get('lemma', '')}, Семантическая роль: {node.get('semantic_role', '')}, "
+                            f"Значение слова: {node.get('word_meaning', '')}\n"
                         )
                     f.write("\n")
         except Exception as e:
-            raise Exception(f"Ошибка при документировании результатов: {str(e)}")
+            raise Exception(f"Ошибка при документировании результатовlift: {str(e)}")
 
-    def edit_result(self, results, sentence_index, node_id, new_head_id=None, new_rel=None, new_pos=None, new_lemma=None, new_semantic_role=None):
+    def edit_result(self, results, sentence_index, node_id, new_head_id=None, new_rel=None, new_pos=None, 
+                    new_lemma=None, new_semantic_role=None, new_word_meaning=None):
         """
         Редактирует параметры узла в дереве анализа.
         """
@@ -108,6 +111,8 @@ class ResultManager:
                 tree.nodes[node_id]['lemma'] = new_lemma
             if new_semantic_role is not None:
                 tree.nodes[node_id]['semantic_role'] = new_semantic_role
+            if new_word_meaning is not None:
+                tree.nodes[node_id]['word_meaning'] = new_word_meaning
             
             return results
         except Exception as e:

@@ -62,7 +62,7 @@ class MainWindow(QMainWindow):
         self.tree_widget.setHeaderLabels([
             "Идентификатор", "Слово", "Часть речи", "Член предложения", 
             "К какому слову относится", "Лемма", "Семантическая роль", 
-            "Тип лексического значения", "Значение слова"
+            "Значение слова"
         ])
         self.tree_widget.setStyleSheet("QTreeWidget { font-size: 14px; }")
         self.tree_widget.setColumnWidth(0, 50)
@@ -72,8 +72,7 @@ class MainWindow(QMainWindow):
         self.tree_widget.setColumnWidth(4, 100)
         self.tree_widget.setColumnWidth(5, 100)
         self.tree_widget.setColumnWidth(6, 120)
-        self.tree_widget.setColumnWidth(7, 120)
-        self.tree_widget.setColumnWidth(8, 150)
+        self.tree_widget.setColumnWidth(7, 150)
         self.tree_widget.itemDoubleClicked.connect(self.edit_node)
         main_layout.addWidget(self.tree_widget)
 
@@ -118,7 +117,7 @@ class MainWindow(QMainWindow):
     def display_results(self, results):
         self.tree_widget.clear()
         for i, tree in enumerate(results):
-            root = QTreeWidgetItem(self.tree_widget, [f"Предложение {i+1}", "", "", "", "", "", "", "", ""])
+            root = QTreeWidgetItem(self.tree_widget, [f"Предложение {i+1}", "", "", "", "", "", "", ""])
             for node_id, node in tree.to_dict().items():
                 item = QTreeWidgetItem(root, [
                     node_id,
@@ -128,7 +127,6 @@ class MainWindow(QMainWindow):
                     node['head_id'],
                     node.get('lemma', ''),
                     node.get('semantic_role', ''),
-                    node.get('lexical_type', ''),
                     node.get('word_meaning', '')
                 ])
                 item.setData(0, Qt.UserRole, (i, node_id))
@@ -143,8 +141,7 @@ class MainWindow(QMainWindow):
         current_head_id = item.text(4)
         current_lemma = item.text(5)
         current_semantic_role = item.text(6)
-        current_lexical_type = item.text(7)
-        current_word_meaning = item.text(8)
+        current_word_meaning = item.text(7)
 
         dialog = QDialog(self)
         dialog.setWindowTitle("Редактировать узел")
@@ -155,7 +152,6 @@ class MainWindow(QMainWindow):
         head_id_edit = QLineEdit(current_head_id)
         lemma_edit = QLineEdit(current_lemma)
         semantic_role_edit = QLineEdit(current_semantic_role)
-        lexical_type_edit = QLineEdit(current_lexical_type)
         word_meaning_edit = QLineEdit(current_word_meaning)
 
         layout.addRow("Часть речи:", pos_edit)
@@ -163,7 +159,6 @@ class MainWindow(QMainWindow):
         layout.addRow("К какому слову относится (ID):", head_id_edit)
         layout.addRow("Лемма:", lemma_edit)
         layout.addRow("Семантическая роль:", semantic_role_edit)
-        layout.addRow("Тип лексического значения:", lexical_type_edit)
         layout.addRow("Значение слова:", word_meaning_edit)
 
         buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
@@ -180,13 +175,12 @@ class MainWindow(QMainWindow):
                 new_head_id = head_id_edit.text().strip() or None
                 new_lemma = lemma_edit.text().strip() or None
                 new_semantic_role = semantic_role_edit.text().strip() or None
-                new_lexical_type = lexical_type_edit.text().strip() or None
                 new_word_meaning = word_meaning_edit.text().strip() or None
                 self.current_results = self.result_manager.edit_result(
                     self.current_results, sentence_index, node_id,
                     new_head_id=new_head_id, new_rel=new_rel, new_pos=new_pos,
                     new_lemma=new_lemma, new_semantic_role=new_semantic_role,
-                    new_lexical_type=new_lexical_type, new_word_meaning=new_word_meaning
+                    new_word_meaning=new_word_meaning
                 )
                 self.display_results(self.current_results)
                 QMessageBox.information(self, "Успех", "Узел успешно отредактирован")

@@ -67,8 +67,7 @@ class TextAnalyzer:
                     rel = translate_rel(token.rel)
                     lemma = self.semantic_analyzer.lemmatize(token.text)
                     semantic_role = self.semantic_analyzer.determine_semantic_role(pos, rel)
-                    lexical_type = self.semantic_analyzer.determine_lexical_type(token.text, pos, rel, sentence_text)
-                    word_meaning = self.semantic_analyzer.get_word_meaning(lemma)
+                    word_meaning = self.semantic_analyzer.get_word_meaning(lemma, pos, rel, token.text)
                     tree.add_node(
                         node_id=token.id,
                         text=token.text,
@@ -77,7 +76,6 @@ class TextAnalyzer:
                         rel=rel,
                         lemma=lemma,
                         semantic_role=semantic_role,
-                        lexical_type=lexical_type,
                         word_meaning=word_meaning
                     )
                 results.append(tree)

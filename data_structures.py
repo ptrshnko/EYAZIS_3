@@ -10,7 +10,7 @@ class SyntaxTree:
         """
         self.nodes = {}
 
-    def add_node(self, node_id, text, pos, head_id, rel, lemma=None, semantic_role=None, lexical_type=None, word_meaning=None):
+    def add_node(self, node_id, text, pos, head_id, rel, lemma=None, semantic_role=None, word_meaning=None):
         """
         Добавляет узел в синтаксическое дерево с семантическими данными.
 
@@ -22,7 +22,6 @@ class SyntaxTree:
             rel (str): Тип синтаксической связи.
             lemma (str, optional): Лемма слова.
             semantic_role (str, optional): Семантическая роль.
-            lexical_type (str, optional): Тип лексического значения (прямое/переносное).
             word_meaning (str, optional): Значение слова.
         """
         self.nodes[node_id] = {
@@ -32,7 +31,6 @@ class SyntaxTree:
             'rel': rel,
             'lemma': lemma,
             'semantic_role': semantic_role,
-            'lexical_type': lexical_type,
             'word_meaning': word_meaning
         }
 
